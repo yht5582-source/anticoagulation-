@@ -21,7 +21,7 @@ const DRUGS=[
 {n:'Aspirin',g:'抗血小板',use:'冠心病、非心源性中風次級預防；ACS／PCI 的 DAPT 組成。',no:'活動性重大出血、嚴重過敏／aspirin 誘發呼吸道反應。',care:'不是 AF 抗凝替代品；沒有心血管疾病者不應常規自行用於初級預防。',s:[1,2,5]},
 {n:'Clopidogrel',g:'抗血小板',use:'PCI／ACS、非心源性中風、症狀性 PAD；與口服抗凝合用時常為優先 P2Y12 選項。',no:'活動性病理性出血、嚴重過敏。',care:'注意 CYP2C19 代謝、交互作用與療效不足；合併療程須有結束日期。',s:[2,5]},
 {n:'Ticagrelor',g:'抗血小板',use:'ACS／PCI；特定輕度中風或高風險 TIA 短期方案。',no:'曾有顱內出血、活動性病理性出血；嚴重肝功能不全應避免。',care:'可能呼吸困難或心搏過慢；注意強效 CYP3A 交互作用。',s:[12]},
-{n:'Prasugrel',g:'抗血小板',use:'接受 PCI 的 ACS 病人。',no:'任何中風或 TIA 病史、活動性病理性出血。',care:'≥75 歲通常不建議（特定高缺血風險例外）；<60 kg 出血風險較高。',s:[11]},
+{n:'Prasugrel',g:'抗血小板',use:'需接受 PCI 的 ACS 病人。',no:'活動性病理性出血（含顱內出血）。中風／TIA 病史：美國仿單列為禁忌、台灣仿單列為出血風險警語，指引不建議使用。',care:'台灣劑量：起始 20 mg → 3.75 mg QD（美國為 60 mg → 10 mg）。≥75 歲、≤50 kg 出血風險增加。健保限 PCI 之住院 ACS，合併 aspirin 最長 12 個月。',s:[11]},
 {n:'Cilostazol',g:'抗血小板',use:'間歇性跛行；特定中風預防方案依當地指引。',no:'任何嚴重度的心衰竭。',care:'可能心悸、頭痛；不能作為 AF 或 VTE 抗凝替代品。',s:[13]}];
 const CASES=[
 {t:'01｜AF 的中風預防',tag:'基本選藥',body:'72 歲男性，已確認 AF，合併高血壓、糖尿病；CrCl 65。無瓣膜狹窄、出血、近期 PCI 或其他限制。',q:'長期預防栓塞最合適的方向？',o:['Aspirin 即可','依核准條件選 DOAC','常規 aspirin + clopidogrel','不需要抗栓'],a:1,why:'CHA₂DS₂-VA = 3（65–74 歲、高血壓、糖尿病各 1）。需抗凝；多數此類 AF 優先考慮 DOAC，並核對適應症及劑量。',wrong:['Aspirin 不能取代 AF 抗凝。','','DAPT 不是 AF 抗凝替代品，且增加出血。','此病例已有明確的栓塞風險。'],s:[0,1]},
@@ -29,7 +29,7 @@ const CASES=[
 {t:'03｜孕期 DVT',tag:'特殊族群',body:'30 歲女性，妊娠 24 週，確診近端 DVT，生命徵象穩定、腎功能正常、無 HIT。',q:'通常優先考慮哪種治療？',o:['LMWH','Warfarin','Dabigatran','Aspirin'],a:0,why:'孕期 VTE 通常優先 LMWH，並規劃產前停藥及神經軸麻醉時序。機械瓣膜孕婦是另一種需專科處理的情境。',wrong:['','Warfarin 可造成胎兒傷害，孕期原則禁用。','孕期不建議 DOAC。','Aspirin 不能治療急性 DVT。'],s:[6]},
 {t:'04｜Heparin 後血小板下降',tag:'HIT',body:'使用 UFH 第 7 天，血小板由 220 降至 85 ×10⁹/L，出現新發 DVT，無重大出血，臨床高度懷疑 HIT。',q:'下一步？',o:['改用 LMWH','立刻單用 warfarin','停止所有 heparin，評估非 heparin 抗凝','停藥後只觀察'],a:2,why:'疑似高機率 HIT 應依 4Ts、檢驗與出血風險處理，停止 UFH／LMWH／flush，使用適當非 heparin 抗凝。血小板未恢復前不要開始 warfarin。',wrong:['LMWH 也可與 HIT 抗體交叉反應。','急性 HIT 早期 warfarin 可造成肢端壞死。','','HIT 是高度促血栓狀態，單純停藥通常不足。'],s:[4]},
 {t:'05｜AKI 合併急性 PE',tag:'腎功能',body:'70 歲男性，確診 PE、目前穩定。CrCl 約 18 且持續惡化，無出血或 HIT；可能需要侵入性處置。',q:'住院初期較易調整的抗凝選項？',o:['標準劑量 enoxaparin 不調整','UFH，依檢驗調整','直接常規劑量 dabigatran','Aspirin'],a:1,why:'腎功能快速變化、可能需介入時，UFH 較方便滴定及停用。這不代表 UFH 沒有出血風險；仍需血球及抗凝監測。',wrong:['Enoxaparin 可能累積；CrCl <30 需調整。','','Dabigatran 腎排除依賴高，不能直接沿用常規劑量。','抗血小板不能治療 PE。'],s:[3,8]},
-{t:'06｜ACS 病人曾經 TIA',tag:'個別藥物禁忌',body:'64 歲男性，ACS 接受 PCI，2 年前曾 TIA；無顱內出血，醫師規劃 DAPT。',q:'哪一種 P2Y12 抑制劑不應使用？',o:['Clopidogrel','Ticagrelor','Prasugrel'],a:2,why:'Prasugrel 禁忌包括任何中風或 TIA 病史。Ticagrelor 的特定病史禁忌是顱內出血，兩者不能混淆。',wrong:['TIA 本身不是 clopidogrel 禁忌。','既往 TIA 本身不同於顱內出血病史。',''],s:[11,12]},
+{t:'06｜ACS 病人曾經 TIA',tag:'個別藥物禁忌',body:'64 歲男性，ACS 接受 PCI，2 年前曾 TIA；無顱內出血，醫師規劃 DAPT。',q:'哪一種 P2Y12 抑制劑不應使用？',o:['Clopidogrel','Ticagrelor','Prasugrel'],a:2,why:'中風／TIA 病史者使用 prasugrel 出血（含顱內出血）增加且無淨效益：美國仿單列為禁忌、台灣仿單列為警語，指引不建議。Ticagrelor 的特定病史禁忌是顱內出血，兩者不能混淆。',wrong:['TIA 本身不是 clopidogrel 禁忌。','既往 TIA 本身不同於顱內出血病史。',''],s:[11,12]},
 {t:'07｜非心源性中風',tag:'抗血小板',body:'66 歲女性，非心源性缺血性中風後 6 個月；無 AF、機械瓣膜或其他抗凝適應症。',q:'一般長期次級預防方向？',o:['常規 warfarin','常規 DOAC','適當單一抗血小板藥','永久 DAPT'],a:2,why:'非心源性中風通常選抗血小板。短期 DAPT 只用於特定早期輕微中風／高風險 TIA 等，不等於永久合併。',wrong:['沒有抗凝適應症時不常規用 warfarin。','不能對所有缺血性中風經驗性給 DOAC。','','長期 DAPT 通常增加出血而無足夠額外效益。'],s:[5]},
 {t:'08｜活動性出血優先',tag:'安全檢核',body:'78 歲 AF 病人服用 apixaban，突然大量黑便、暈厥，血壓 78/45 mmHg。',q:'最優先的處置方向？',o:['改成 aspirin 繼續預防','增加抗凝避免停藥血栓','急救、止血及逆轉評估','等待下次門診'],a:2,why:'重大出血伴休克需立即急救、暫停相關抗栓並評估逆轉及止血。穩定後再由團隊評估重啟時機，不能在此流程直接換藥。',wrong:['Aspirin 仍增加出血，也不能取代 AF 抗凝。','此時增加抗凝可能致命。','','需要緊急處置。'],s:[1]},
 {t:'09｜AF 合併冠狀動脈支架',tag:'合併療法',body:'73 歲男性 AF，因 ACS 接受 PCI；同時具有長期抗凝與抗血小板適應症。',q:'哪個原則正確？',o:['終身三重抗栓','僅 DAPT 取代 AF 抗凝','短期合併，明訂 aspirin 停用與降階計畫'],a:2,why:'避免長期三重療法。多數需口服抗凝的 ACS／PCI 病人可於 1–4 週停 aspirin，續口服抗凝加 P2Y12（常選 clopidogrel）；實際時程由缺血與出血風險決定。',wrong:['長期三重治療出血風險高。','DAPT 不能取代 AF 抗凝。',''],s:[2]},
@@ -63,7 +63,7 @@ else return stop('請先選擇明確臨床情境',['其他適應症、人工瓣�
 if(!chronic&&(x.valve==='mechanical'||x.aps==='yes')){r.level='review';r.points.push('另有機械瓣膜／高風險血栓性 APS：原本的長期 warfarin 需持續，不因本次目的而停用；與抗血小板合併、預防劑量或透析 heparin 均須以此為前提個別規劃。');r.avoid.push('機械瓣膜／高風險 APS 不以 DOAC 或抗血小板取代 warfarin。');r.refs.push(x.valve==='mechanical'?9:7);}
 if(x.renal==='aki'||x.renal==='severe'||x.renal==='dialysis'){r.level='review';r.points.push('腎功能限制：急性需注射抗凝時常考慮 UFH；LMWH 須依 CrCl 調整，DOAC 不可直接套一般劑量。');if(x.ind==='af'&&x.score!=='0'&&x.valve==='none'&&x.aps==='no'){r.title='嚴重 CKD／透析 AF：需個別權衡抗凝';r.points.push('透析 AF 淨效益不確定。美國部分建議不能直接等同台灣仿單／健保；由團隊評估 warfarin 或符合當地規範的選項。');}r.refs.push(1,8);}
 if(x.combo==='yes'){r.level='review';r.points.push('另有長期抗凝＋近期 PCI／ACS：需心臟科訂合併與降階計畫，避免長期三重治療。多數在 1–4 週內停 aspirin，續 OAC＋P2Y12，實際由風險決定。');r.refs.push(2);}
-if(x.stroke==='yes'){r.avoid.push('既往中風／TIA：Prasugrel 禁用。');r.refs.push(11);}
+if(x.stroke==='yes'){r.avoid.push('既往中風／TIA：Prasugrel 不建議（美國仿單禁忌、台灣仿單警語）。');r.refs.push(11);}
 if(x.ich==='yes'){r.level='review';r.avoid.push('顱內出血病史：Ticagrelor 禁用；是否抗凝及重啟時機須專科評估。');r.refs.push(12,1);}
 if(x.hf==='yes'){r.avoid.push('心衰竭：Cilostazol 禁用。');r.refs.push(13);}
 r.points.push('處方前確認 CBC／血小板、腎肝功能、出血史、藥物交互作用、手術時程與當地仿單；本頁不產生處方劑量。');return r;

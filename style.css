@@ -7,3 +7,4 @@
 .rx-label{font-size:12px;letter-spacing:1px;color:var(--muted);margin:18px 0 6px}.rx-card{border:1px solid var(--line);border-radius:8px;padding:16px 18px;background:#fff}.rx-card h3{margin:0 0 4px;font-size:17px}.rx-dose{font-size:16px;font-weight:600;color:var(--dark);margin:0 0 8px}.rx-card ul{margin:0;padding-left:20px;font-size:14px}.rx-card .refs{margin-top:10px;font-size:11px}.rx-card.rx-main{border:2px solid var(--teal);background:#f4faf9}.rx-card.rx-main .rx-dose{font-size:20px;color:var(--teal)}.rx-card.caution{border-style:dashed;border-color:#c99a3d}.rx-alts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.rx-foot{max-width:100%;margin-top:16px}
 @media print{.rx-card{break-inside:avoid}}
 .result h2{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;font-weight:700}
+.nhi{background:#f3f1fb;border-left:3px solid #6b5bb5;padding:14px 16px;margin-top:20px;font-size:14px}.nhi ul{margin:8px 0 0;padding-left:20px}
