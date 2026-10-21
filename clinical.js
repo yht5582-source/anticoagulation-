@@ -58,6 +58,7 @@ else {r.title=+x.score===1?'CHA₂DS₂-VA 1：可考慮抗凝，共同決策':'
 else if(x.ind==='acs'){r.title='ACS／PCI：抗血小板為核心，急性期合併抗凝';r.points.push('通常 aspirin + P2Y12；無高出血風險 ACS 預設常為 12 個月，需個別調整。','程序期 UFH 等抗凝由心臟科依介入計畫選擇；出院後不因 PCI 自動長期口服抗凝。');r.refs.push(2);}
 else if(x.ind==='stroke'){r.title='非心源性中風／TIA：抗血小板';r.points.push('穩定期通常單一抗血小板。只有特定早期輕微中風／高風險 TIA 等適用短期 DAPT。','若另有 AF／機械瓣膜，需重新確認栓塞機轉與抗凝適應症。');r.avoid.push('不對原因未明的栓塞性中風常規經驗性抗凝。');r.refs.push(5);}
 else if(x.ind==='prevent'){r.title='住院／術後 VTE 預防：先評估血栓與出血風險';r.points.push('依內外科、活動度與手術類型評估；合適者可用預防劑量 UFH／LMWH。','高出血風險者考慮適當機械性預防；不能把預防劑量當成急性 VTE 治療劑量。');r.refs.push(8);}
+else if(x.ind==='cadpad'){r.title='CAD／PAD 心血管保護：低劑量 rivaroxaban 合併 aspirin';r.points.push('Rivaroxaban 2.5 mg BID 是血管保護劑量，不能用於 AF 或 VTE 治療，也不能取代 DAPT。');}
 else if(x.ind==='dialysis'){r.title='透析管路抗凝：依院內流程選擇';r.points.push('常用 UFH，部分流程用 LMWH；高出血風險考慮無 heparin／區域抗凝方案。','透析管路抗凝不等於全天候 AF 中風預防。');r.refs.push(4,8);}
 else return stop('請先選擇明確臨床情境',['其他適應症、人工瓣膜早期術後、癌症相關血栓等需另外評估。'],[1,3]);
 if(!chronic&&(x.valve==='mechanical'||x.aps==='yes')){r.level='review';r.points.push('另有機械瓣膜／高風險血栓性 APS：原本的長期 warfarin 需持續，不因本次目的而停用；與抗血小板合併、預防劑量或透析 heparin 均須以此為前提個別規劃。');r.avoid.push('機械瓣膜／高風險 APS 不以 DOAC 或抗血小板取代 warfarin。');r.refs.push(x.valve==='mechanical'?9:7);}

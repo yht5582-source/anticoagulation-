@@ -16,6 +16,7 @@ const RX_SRC={
  twPradaxa:SOURCES.push(['台灣仿單：Pradaxa 普栓達（114.7 版）','https://www.hosp.nycu.edu.tw/en/departments/dep-support/pharmacy/drog-use-search/2984-2984.html'])-1,
  twEfient:SOURCES.push(['台灣仿單：Efient 抑凝安（115.8 版）','https://www.hosp.nycu.edu.tw/en/departments/dep-support/pharmacy/drog-use-search/7074-prasugrel.html'])-1,
  twXarelto:SOURCES.push(['台灣仿單：Xarelto 拜瑞妥（2023-05-24 版）','https://reg.802.mnd.gov.tw/PhC/images/drug/OXAR/Guide1.pdf'])-1,
+ twXarelto25:SOURCES.push(['台灣仿單：Xarelto 拜瑞妥 2.5 mg（2026-09-02 版，衛部藥輸字第 027750 號）',''])-1,
  nhi:SOURCES.push(['健保藥品給付規定 第二節 2.1（115.9.22 版）','https://www.nhi.gov.tw/ch/cp-7593-ad2a9-3397-1.html'])-1
 };
 const RX_MEDS=[
@@ -144,6 +145,30 @@ function prescribe(x){
   r.primary={drug:'Aspirin + '+p2.drug,dose:'Aspirin 75–100 mg QD ＋ '+p2.drug+' '+p2.dose,lines:['Aspirin 起始 162–325 mg 嚼服；P2Y12 起始見劑量',x.highBleed==='yes'?'出血風險高：DAPT 1–3 個月後改 P2Y12 單一療法（ticagrelor 或 clopidogrel）':'DAPT 預設 12 個月（健保給付 ticagrelor／clopidogrel 合併最長 9 個月）；耐受者可於 ≥1 個月後改 ticagrelor 單一療法以降低出血',...p2.lines],s:p2.s};
   r.alts.push(...[tica,!noPras&&pras,clop].filter(d=>d&&d!==p2&&!(d===tica&&noTica)));
   r.monitor.push('出院前確認 DAPT 結束日期、胃腸道保護（PPI）與停藥前須諮詢心臟科。');bleedMeds();return r;}
+ if(x.ind==='cadpad'){
+  const riva={drug:'Rivaroxaban 2.5 mg ＋ aspirin',dose:'Rivaroxaban 2.5 mg BID ＋ aspirin 100 mg QD',lines:['可隨餐或空腹；漏服不補，下一次照常服用','長期使用，只要效益大於出血風險','侵入性處置或手術前至少 12 小時停用'],s:[RX_SRC.twXarelto25,RX_SRC.nhi]};
+  const asp={drug:'Aspirin 單一療法',dose:'75–100 mg QD',lines:['不適合或暫緩低劑量 rivaroxaban 時的基本方案'],s:[2]};
+  const cad=[['cpMI','心肌梗塞'],['cpMulti','多支血管冠狀動脈疾病'],['cpPoly','多血管床疾病'],['cpRevasc','複雜血管再通術（左主幹、分岔 ≥2 支架、CTO、最後通暢血管）'],['cpST','抗血小板治療下仍發生支架內血栓'],['cpStrokeAth','動脈硬化相關缺血性腦中風']].filter(([k])=>x[k]==='yes').map(([,t])=>t);
+  const pad=[['cpPadRevasc','主動脈股動脈／下肢繞道或髂、股、膝下動脈 PTA'],['cpAmp','動脈疾病造成的截肢或壞疽'],['cpClaud','間歇性跛行且非侵入檢查狹窄 >50%']].filter(([k])=>x[k]==='yes').map(([,t])=>t);
+  const t=x.cpType,okCad=t!=='pad'&&cad.length,okPad=t!=='cad'&&pad.length;
+  r.nhi=[okCad||okPad?'符合高風險條件：'+[...(okCad?cad:[]),...(okPad?pad:[])].join('、'):'未勾選健保高風險條件，需自費（CAD 須 2 年內符合所列心血管事件之一；PAD 須符合所列條件之一）。','限 2.5 mg 每日 2 次、每次 1 粒，且須與 aspirin 併用。','不得合併 DAPT、P2Y12 抑制劑（clopidogrel、ticagrelor、prasugrel）、cilostazol 或其他抗凝血劑（如 warfarin）。'];r.refs.push(RX_SRC.twXarelto25,RX_SRC.nhi);
+  const block=[];
+  if(x.cpDapt==='yes')block.push('目前使用 DAPT、P2Y12 抑制劑、cilostazol 或其他抗凝血劑：仿單指出不適合與 DAPT 併用，健保亦不得合併；療程結束後再評估。');
+  if(x.valve==='mechanical'||x.aps==='yes')block.push('機械瓣膜／高風險 APS 需治療劑量 warfarin；2.5 mg 不提供足夠抗凝，仿單不建議用於人工瓣膜。');
+  if(x.cpStroke==='hemlac'||x.ich==='yes')block.push('曾有出血性或腔隙性中風、或顱內出血：仿單建議避免（COMPASS 未納入）。');
+  if(x.cpStroke==='recent1m')block.push('一個月內缺血性、非腔隙性中風：中風後第一個月內應避免，滿一個月後再評估。');
+  if(dial||c<15)block.push('CrCl <15 或透析：禁用。');else if(c<30)block.push('CrCl 15–30：仿單建議避免（資料有限）。');
+  if(x.liver==='b')block.push('Child-Pugh B／C：應避免。');
+  if(has('strong'))block.push('併用全身性 azole 抗黴菌劑或 HIV 蛋白酶抑制劑：不建議。');
+  if(block.length){review('CAD／PAD：目前不宜加上低劑量 rivaroxaban');r.notes.unshift(...block);r.primary=asp;r.avoid.push('此時不加 rivaroxaban 2.5 mg BID。');return r;}
+  r.title=t==='pad'?'症狀性 PAD：rivaroxaban 2.5 mg BID ＋ aspirin':t==='cad'?'CAD：rivaroxaban 2.5 mg BID ＋ aspirin':'CAD＋PAD：rivaroxaban 2.5 mg BID ＋ aspirin';
+  r.primary=riva;r.alts.push(asp);
+  if(!(okCad||okPad))review();
+  if(x.highBleed==='yes'){review();r.notes.unshift('出血風險高：COMPASS 排除高出血風險者，需個別權衡；必要時維持 aspirin 單一療法。');}
+  if(c<=50)r.notes.push('CrCl 30–50 不需調劑量，但併用其他會升高 rivaroxaban 濃度的藥物時須謹慎。');
+  if(+x.weight<=50)r.notes.push('體重 ≤50 kg 或 BMI ≤18.5 出血機率較高。');
+  if(x.hf==='yes')r.notes.push('COMPASS 排除 LVEF <30% 或 NYHA III–IV 心衰竭者，此族群資料有限。');
+  r.monitor.push('定期追蹤 Hb、腎功能與出血徵兆；不明原因 Hb 或血壓下降時尋找出血部位。','長期 NSAIDs、SSRI／SNRI 會增加出血；避免自行服用止痛藥。');bleedMeds();return r;}
  if(x.ind==='stroke'){
   if(x.valve==='mechanical'||x.aps==='yes'){const [t,rg]=inrTarget(x);r.primary=warfarinRx(t,rg,['機械瓣膜／APS 病人的缺血性中風屬抗凝適應症；重啟時機依梗塞大小與出血風險']);r.avoid.push('不以抗血小板或 DOAC 取代。');warfMonitor();return r;}
   const asp={drug:'Aspirin',dose:'75–100 mg QD',lines:['長期單一抗血小板'],s:[RX_SRC.stroke]},clop={drug:'Clopidogrel',dose:'75 mg QD',lines:['替代 aspirin 的長期單一抗血小板','健保限 aspirin 過敏、aspirin 相關潰瘍／出血或一年內消化性潰瘍'],s:[RX_SRC.stroke,IX_SOURCES.clopidogrel,RX_SRC.nhi]},ad={drug:'Aspirin／緩釋 dipyridamole',dose:'25/200 mg BID',lines:['頭痛常見'],s:[RX_SRC.stroke]};

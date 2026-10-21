@@ -75,5 +75,17 @@ t('Stroke stable aspirin',{ind:'stroke',strokeAcute:'no'},r=>P(r).drug==='Aspiri
 t('Stroke APS warfarin',{ind:'stroke',strokeAcute:'no',aps:'yes'},r=>P(r).drug==='Warfarin');
 t('Access passes through',{ind:'access',accessType:'avf',accessStage:'mature',kidney:'hd'},r=>!r.primary&&r.notes.length>0);
 t('Dialysis warfarin passes through',{ind:'dialysis',onWarfarin:'yes',inrStatus:'high',hdBleed:'no',clot:'no',kidney:'hd'},r=>r.title.includes('INR'));
+const cp={ind:'cadpad',cpType:'cad',cpStroke:'none',cpDapt:'no',cpMI:'yes'};
+t('CAD/PAD standard regimen + NHI eligible',cp,r=>P(r).dose==='Rivaroxaban 2.5 mg BID ＋ aspirin 100 mg QD'&&r.level==='ok'&&r.nhi[0].includes('心肌梗塞'));
+t('CAD/PAD no NHI criteria -> review',{...cp,cpMI:'no'},r=>P(r).drug.startsWith('Rivaroxaban')&&r.level==='review'&&r.nhi[0].includes('自費'));
+t('PAD criteria only counted for PAD',{...cp,cpType:'pad',cpMI:'yes'},r=>r.nhi[0].includes('自費'));
+t('PAD amputation eligible',{...cp,cpType:'pad',cpMI:'no',cpAmp:'yes'},r=>r.nhi[0].includes('截肢'));
+t('CAD/PAD on DAPT -> aspirin only',{...cp,cpDapt:'yes'},r=>P(r).drug==='Aspirin 單一療法'&&r.notes[0].includes('DAPT'));
+t('CAD/PAD hemorrhagic/lacunar stroke blocked',{...cp,cpStroke:'hemlac'},r=>P(r).drug==='Aspirin 單一療法');
+t('CAD/PAD stroke within 1 month blocked',{...cp,cpStroke:'recent1m'},r=>r.notes.some(n=>n.includes('第一個月')));
+t('CAD/PAD CrCl 15-30 blocked',{...cp,age:'85',weight:'50',scr:'2'},r=>r.crcl<30&&P(r).drug==='Aspirin 單一療法');
+t('CAD/PAD dialysis blocked',{...cp,kidney:'hd'},r=>P(r).drug==='Aspirin 單一療法');
+t('CAD/PAD mechanical valve blocked',{...cp,valve:'mechanical',valvePos:'aortic'},r=>P(r).drug==='Aspirin 單一療法');
+t('CAD/PAD strong inhibitor blocked',{...cp,meds:['strong']},r=>P(r).drug==='Aspirin 單一療法');
 vm.runInContext('RX_MEDS.length; Object.values(RX_SRC).forEach(i=>{if(!SOURCES[i])throw Error("source "+i)})',ctx);
 console.log(n+' prescription tests passed.');
