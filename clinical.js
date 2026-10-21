@@ -34,7 +34,8 @@ const CASES=[
 {t:'08｜活動性出血優先',tag:'安全檢核',body:'78 歲 AF 病人服用 apixaban，突然大量黑便、暈厥，血壓 78/45 mmHg。',q:'最優先的處置方向？',o:['改成 aspirin 繼續預防','增加抗凝避免停藥血栓','急救、止血及逆轉評估','等待下次門診'],a:2,why:'重大出血伴休克需立即急救、暫停相關抗栓並評估逆轉及止血。穩定後再由團隊評估重啟時機，不能在此流程直接換藥。',wrong:['Aspirin 仍增加出血，也不能取代 AF 抗凝。','此時增加抗凝可能致命。','','需要緊急處置。'],s:[1]},
 {t:'09｜AF 合併冠狀動脈支架',tag:'合併療法',body:'73 歲男性 AF，因 ACS 接受 PCI；同時具有長期抗凝與抗血小板適應症。',q:'哪個原則正確？',o:['終身三重抗栓','僅 DAPT 取代 AF 抗凝','短期合併，明訂 aspirin 停用與降階計畫'],a:2,why:'避免長期三重療法。多數需口服抗凝的 ACS／PCI 病人可於 1–4 週停 aspirin，續口服抗凝加 P2Y12（常選 clopidogrel）；實際時程由缺血與出血風險決定。',wrong:['長期三重治療出血風險高。','DAPT 不能取代 AF 抗凝。',''],s:[2]},
 {t:'10｜透析病人的 AF',tag:'不確定性',body:'76 歲男性，血液透析合併 AF，既往反覆腸胃道出血，目前已止血。',q:'最合適的決策方式？',o:['所有透析 AF 都給 DOAC','用 aspirin 當抗凝替代品','個別權衡抗凝效益、出血及本地仿單'],a:2,why:'透析 AF 抗凝淨效益不確定。美國指引對部分病人允許考慮 warfarin 或具證據劑量 apixaban，但不可直接等同台灣核准或健保規定。',wrong:['不能對透析族群一概套用一般 DOAC 結論。','Aspirin 不是 AF 抗凝替代品。',''],s:[1]}];
-function decide(x){
+function decide(x){const r=baseDecision(x);if(x.interact==='yes'&&r.level!=='stop'){if(r.level==='ok')r.level='review';r.points.unshift('已確認重要交互作用：下方方向仍適用，但處方前須依交互作用分級完成審查、監測或改選替代藥物。');}return r;}
+function baseDecision(x){
 const r={level:'ok',title:'',points:[],avoid:[],refs:[]};const stop=(title,points,refs)=>({level:'stop',title,points,avoid:[],refs});
 if([x.bleed,x.unstable,x.neuro].includes('yes'))return stop('先處理急症，暫不進入常規選藥',['活動性重大出血：立即急救、止血與抗栓逆轉評估。','休克／不穩定 PE 或 ACS：啟動急症團隊；抗凝、再灌流需整體判斷。','新發神經症狀：啟動中風流程與腦部影像，先排除出血。'],[1,2,5]);
 if([x.bleed,x.unstable,x.neuro].some(v=>v!=='no'))return stop('安全條件尚未確認',['請確認所有安全檢核；未知不能視為沒有風險。'],[1]);
@@ -42,12 +43,13 @@ if(x.ind==='access'&&x.accessStage==='blocked')return stop('疑似通路急性�
 if(x.hit==='acute')return stop('疑似／急性 HIT：改走非 heparin 路徑',['停止 UFH、LMWH 及 heparin flush；依 4Ts 及檢驗評估。','依腎肝功能、穩定度與出血風險由團隊選非 heparin 抗凝；不能直接換 LMWH。','血小板未恢復前不開始 warfarin。'],[4]);
 if(x.preg==='yes'&&(x.valve==='mechanical'||x.valve==='ms'))return stop('孕期合併瓣膜高風險：專科團隊規劃',['不可套用一般孕期 VTE 或一般 AF 選藥；母胎醫學與心臟科共同安排抗凝與監測。'],[1,6,9]);
 if(x.renal==='unknown'||x.valve==='unknown'||x.hit==='unknown'||x.preg==='unknown'||x.aps==='unknown'||x.liver==='unknown'||x.interact==='unknown')return stop('資料不足，先補齊個別條件',['腎功能、瓣膜、HIT、孕期、APS、肝病及交互作用均會改變選藥。請確認後再產生候選方向。'],[1,3]);
-if(x.liver==='yes'||x.interact==='yes'||x.hit==='past')return stop('有重要限制，需個別用藥審查',['嚴重肝病／凝血異常、重要交互作用或既往 HIT，不能套用一般推薦。','請藥師／專科核對藥物、病史、檢驗及替代方案。'],[4,9,10]);
+if(x.liver==='yes'||x.hit==='past')return stop('有重要限制，需個別用藥審查',['嚴重肝病／凝血異常或既往 HIT，不能套用一般推薦。','請藥師／專科核對藥物、病史、檢驗及替代方案。'],[4,9,10]);
 if(x.preg==='yes')return {level:'review',title:x.ind==='vte'?'孕期 VTE：通常優先 LMWH':'孕期特殊情境：先由專科評估',points:['孕期 VTE 在腎功能許可、無 HIT 時通常選 LMWH；嚴重 CKD／AKI 需另行調整。','安排產前停藥、分娩及神經軸麻醉時序。'],avoid:['不建議 DOAC；warfarin 孕期原則禁用（機械瓣膜為專科例外）。'],refs:[6,9]};
 if(x.ind==='access')return accessDecision(x);
 if(x.ind==='dialysis'&&x.onWarfarin==='yes')return warfarinHD(x);
-if(x.valve==='mechanical'||(x.ind==='af'&&x.valve==='ms')){r.title='長期抗凝方向：Warfarin';r.points.push('機械瓣膜需依瓣膜種類／位置訂 INR；AF 合併中重度二尖瓣狹窄通常 INR 2–3。');r.avoid.push('不以 DOAC 或抗血小板取代。');r.refs.push(1,9);}
-else if(x.aps==='yes'){r.title='高風險血栓性 APS：優先考慮 Warfarin';r.points.push('三重抗體陽性或動脈血栓病史需專科規劃；單純抗體陽性不等於此情境。');r.avoid.push('不建議以 DOAC 取代。');r.refs.push(7);}
+const chronic=['af','vte','stroke'].includes(x.ind);
+if(chronic&&(x.valve==='mechanical'||(x.ind==='af'&&x.valve==='ms'))){r.title='長期抗凝方向：Warfarin';r.points.push('機械瓣膜需依瓣膜種類／位置訂 INR；AF 合併中重度二尖瓣狹窄通常 INR 2–3。');r.avoid.push('不以 DOAC 或抗血小板取代。');r.refs.push(1,9);}
+else if(chronic&&x.aps==='yes'){r.title='高風險血栓性 APS：優先考慮 Warfarin';r.points.push('三重抗體陽性或動脈血栓病史需專科規劃；單純抗體陽性不等於此情境。');r.avoid.push('不建議以 DOAC 取代。');r.refs.push(7);}
 else if(x.ind==='af'){
 if(x.score==='unknown')return stop('先評估 AF 栓塞風險',['使用 2024 ESC CHA₂DS₂-VA；本工具不套用於單純裝置偵測的短暫 AHRE。'],[0]);
 if(+x.score===0){r.title='CHA₂DS₂-VA 0：通常不需常規抗凝';r.points.push('定期重新評估。心律轉復／消融前後等特殊情境另依規範。');r.avoid.push('不要為 AF 常規加 aspirin。');}
@@ -58,6 +60,7 @@ else if(x.ind==='stroke'){r.title='非心源性中風／TIA：抗血小板';r.po
 else if(x.ind==='prevent'){r.title='住院／術後 VTE 預防：先評估血栓與出血風險';r.points.push('依內外科、活動度與手術類型評估；合適者可用預防劑量 UFH／LMWH。','高出血風險者考慮適當機械性預防；不能把預防劑量當成急性 VTE 治療劑量。');r.refs.push(8);}
 else if(x.ind==='dialysis'){r.title='透析管路抗凝：依院內流程選擇';r.points.push('常用 UFH，部分流程用 LMWH；高出血風險考慮無 heparin／區域抗凝方案。','透析管路抗凝不等於全天候 AF 中風預防。');r.refs.push(4,8);}
 else return stop('請先選擇明確臨床情境',['其他適應症、人工瓣膜早期術後、癌症相關血栓等需另外評估。'],[1,3]);
+if(!chronic&&(x.valve==='mechanical'||x.aps==='yes')){r.level='review';r.points.push('另有機械瓣膜／高風險血栓性 APS：原本的長期 warfarin 需持續，不因本次目的而停用；與抗血小板合併、預防劑量或透析 heparin 均須以此為前提個別規劃。');r.avoid.push('機械瓣膜／高風險 APS 不以 DOAC 或抗血小板取代 warfarin。');r.refs.push(x.valve==='mechanical'?9:7);}
 if(x.renal==='aki'||x.renal==='severe'||x.renal==='dialysis'){r.level='review';r.points.push('腎功能限制：急性需注射抗凝時常考慮 UFH；LMWH 須依 CrCl 調整，DOAC 不可直接套一般劑量。');if(x.ind==='af'&&x.score!=='0'&&x.valve==='none'&&x.aps==='no'){r.title='嚴重 CKD／透析 AF：需個別權衡抗凝';r.points.push('透析 AF 淨效益不確定。美國部分建議不能直接等同台灣仿單／健保；由團隊評估 warfarin 或符合當地規範的選項。');}r.refs.push(1,8);}
 if(x.combo==='yes'){r.level='review';r.points.push('另有長期抗凝＋近期 PCI／ACS：需心臟科訂合併與降階計畫，避免長期三重治療。多數在 1–4 週內停 aspirin，續 OAC＋P2Y12，實際由風險決定。');r.refs.push(2);}
 if(x.stroke==='yes'){r.avoid.push('既往中風／TIA：Prasugrel 禁用。');r.refs.push(11);}

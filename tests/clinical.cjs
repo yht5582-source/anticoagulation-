@@ -16,6 +16,12 @@ test('HF restriction',{hf:'yes'},r=>r.avoid.some(x=>x.includes('Cilostazol')));
 for(const type of ['avf','avg'])for(const stage of ['new','mature','post','blocked'])test('access '+type+stage,{ind:'access',accessType:type,accessStage:stage,renal:'dialysis'},r=>stage==='blocked'?r.level==='stop':r.level==='review');
 for(const inrStatus of ['low','target','high','unknown'])test('warfarin '+inrStatus,{ind:'dialysis',onWarfarin:'yes',inrStatus,hdBleed:'no',clot:'no',renal:'dialysis'},r=>r.level==='review');
 test('warfarin missing',{ind:'dialysis',onWarfarin:'yes'},r=>r.level==='stop');
+test('Interaction keeps dialysis warfarin path',{ind:'dialysis',onWarfarin:'yes',inrStatus:'target',hdBleed:'no',clot:'no',renal:'dialysis',interact:'yes'},r=>r.level==='review'&&r.title.includes('INR 達個人目標')&&r.points[0].includes('交互作用'));
+test('Interaction keeps AF guidance',{interact:'yes'},r=>r.level==='review'&&r.points.some(x=>x.includes('DOAC')));
+test('Liver still stops',{liver:'yes'},r=>r.level==='stop');
+test('ACS with mechanical valve keeps ACS guidance',{ind:'acs',valve:'mechanical'},r=>r.title.includes('ACS')&&r.level==='review'&&r.avoid.some(x=>x.includes('warfarin')));
+test('Stroke with APS uses warfarin',{ind:'stroke',aps:'yes'},r=>r.title.includes('Warfarin'));
+test('VTE with mechanical valve uses warfarin',{ind:'vte',valve:'mechanical'},r=>r.title.includes('Warfarin'));
 vm.runInContext('CASES.forEach(c=>{if(!c.o[c.a]||!c.why||c.s.some(i=>!SOURCES[i]))throw Error(c.t)});DRUGS.forEach(d=>{if(d.s.some(i=>!SOURCES[i]))throw Error(d.n)})',ctx);console.log(count+' clinical branch tests passed; '+vm.runInContext('CASES.length',ctx)+' cases and source mappings valid.');
 
-vm.runInContext(`if(new Set(IX.map(x=>x.id)).size!==IX.length)throw Error('duplicate interaction');IX.forEach(x=>{if(x.s.some(i=>!SOURCES[i]))throw Error(x.id)});if(selectedInteractions(['w-up']).length!==1||selectedInteractions([]).length!==0)throw Error('selection');`,ctx);console.log('19 interaction groups: sources, unique identifiers and selection checks passed.');
+vm.runInContext(`if(new Set(IX.map(x=>x.id)).size!==IX.length)throw Error('duplicate interaction');IX.forEach(x=>{if(x.s.some(i=>!SOURCES[i]))throw Error(x.id)});if(selectedInteractions(['w-up']).length!==1||selectedInteractions([]).length!==0)throw Error('selection');`,ctx);console.log(vm.runInContext('IX.length',ctx)+' interaction groups: sources, unique identifiers and selection checks passed.');
