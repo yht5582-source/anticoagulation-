@@ -9,7 +9,7 @@ t('AF standard apixaban 5',{ind:'af'},r=>P(r).drug==='Apixaban'&&P(r).dose==='5 
 t('AF apixaban ABC 2.5',{ind:'af',age:'82',weight:'55',scr:'1.0'},r=>P(r).dose==='2.5 mg BID');
 t('AF apixaban one criterion stays 5',{ind:'af',age:'82',weight:'70',scr:'0.8'},r=>P(r).dose==='5 mg BID');
 t('AF CrCl 15-29 apixaban 2.5, no dabigatran',{ind:'af',age:'80',weight:'60',scr:'2.2'},r=>r.crcl<30&&P(r).dose==='2.5 mg BID'&&r.avoid.some(a=>a.includes('Dabigatran')));
-t('AF edoxaban 30 for CrCl<=50',{ind:'af',age:'78',weight:'65',scr:'1.4'},r=>alt(r,'Edoxaban').dose==='30 mg QD'&&alt(r,'Rivaroxaban').dose.startsWith('15'));
+t('AF edoxaban 30 for CrCl<=50',{ind:'af',age:'78',weight:'65',scr:'1.4'},r=>alt(r,'Edoxaban').dose==='30 mg QD'&&alt(r,'Rivaroxaban').dose.startsWith('10–15'));
 t('AF dabigatran 110 at 80+',{ind:'af',age:'81',weight:'80',scr:'0.9'},r=>alt(r,'Dabigatran').dose==='110 mg BID');
 t('AF dabigatran verapamil no reduction (TW)',{ind:'af',meds:['vera']},r=>alt(r,'Dabigatran').dose==='150 mg BID'&&alt(r,'Dabigatran').lines.some(l=>l.includes('verapamil')));
 t('AF dabigatran 110 at 75-79 (TW bleeding risk)',{ind:'af',age:'77',weight:'80',scr:'0.8'},r=>alt(r,'Dabigatran').dose==='110 mg BID');
@@ -53,8 +53,13 @@ t('Prevent medical enox 40',{ind:'prevent',surgery:'medical'},r=>P(r).dose==='40
 t('Prevent CrCl<30 enox 30',{ind:'prevent',surgery:'medical',age:'85',weight:'50',scr:'2'},r=>P(r).dose==='30 mg SC QD');
 t('Prevent dialysis UFH',{ind:'prevent',surgery:'surgical',kidney:'hd'},r=>P(r).drug==='UFH 皮下');
 t('Prevent high bleed IPC',{ind:'prevent',surgery:'medical',highBleed:'yes'},r=>P(r).drug.includes('IPC'));
-t('Prevent ortho rivaroxaban (TW approved)',{ind:'prevent',surgery:'ortho'},r=>P(r).drug==='Rivaroxaban'&&alt(r,'Apixaban').caution&&alt(r,'Dabigatran').dose.startsWith('220'));
-t('Prevent ortho dabigatran 150 at 75',{ind:'prevent',surgery:'ortho',age:'76'},r=>alt(r,'Dabigatran').dose.startsWith('150'));
+t('Prevent ortho no VTE history -> enoxaparin',{ind:'prevent',surgery:'ortho'},r=>P(r).drug==='Enoxaparin'&&alt(r,'Rivaroxaban').caution&&alt(r,'Apixaban').caution);
+t('Prevent ortho prior VTE -> rivaroxaban 10',{ind:'prevent',surgery:'ortho',vteHx:'yes'},r=>P(r).drug==='Rivaroxaban'&&P(r).dose.startsWith('10 mg')&&alt(r,'Dabigatran').dose.startsWith('220'));
+t('AF rivaroxaban TW CrCl>50 15-20',{ind:'af'},r=>alt(r,'Rivaroxaban').dose.startsWith('15–20'));
+t('AF rivaroxaban TW CrCl 50 boundary 10-15',{ind:'af',age:'68',weight:'50',scr:'1.0'},r=>r.crcl===50&&alt(r,'Rivaroxaban').dose.startsWith('10–15'));
+t('VTE CrCl 30-50 rivaroxaban maintenance note',{ind:'vte',age:'80',weight:'60',scr:'1.2'},r=>alt(r,'Rivaroxaban').lines.some(l=>l.includes('15 mg QD')));
+t('AF combo rivaroxaban PCI dose note',{ind:'af',combo:'yes'},r=>r.notes[0].includes('15 mg QD'));
+t('Prevent ortho dabigatran 150 at 75',{ind:'prevent',surgery:'ortho',age:'76',vteHx:'yes'},r=>alt(r,'Dabigatran').dose.startsWith('150'));
 t('Prevent medical NHI note',{ind:'prevent',surgery:'medical'},r=>r.nhi[0].includes('未列'));
 t('Prevent on warfarin valve',{ind:'prevent',surgery:'medical',valve:'mechanical',valvePos:'aortic'},r=>!r.primary);
 t('ACS PCI ticagrelor',{ind:'acs',acsPci:'yes'},r=>P(r).drug==='Aspirin + Ticagrelor'&&alt(r,'Prasugrel').dose.includes('3.75')&&r.nhi.length===3);

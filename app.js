@@ -1,5 +1,5 @@
 const main=document.querySelector('#main');let page='guide',step=0,currentCase=0,answers={},filter='',group='all';
-const initial=()=>({ind:'',bleed:'',unstable:'',neuro:'',age:'',sex:'',weight:'',scr:'',kidney:'none',aki:'no',valve:'',valvePos:'',valveRisk:'no',preg:'',hit:'',aps:'',liver:'',ich:'no',strokeHx:'no',hf:'no',highBleed:'no',meds:[],vaHF:'no',vaHTN:'no',vaDM:'no',vaStroke:'no',vaVasc:'no',combo:'no',provoked:'',cancer:'no',surgery:'',acsPci:'',acsOac:'no',strokeAcute:'',accessType:'',accessStage:'',onWarfarin:'no',inrStatus:'',hdBleed:'',clot:'',interact:'unknown',ixSelected:[]});let state=initial();
+const initial=()=>({ind:'',bleed:'',unstable:'',neuro:'',age:'',sex:'',weight:'',scr:'',kidney:'none',aki:'no',valve:'',valvePos:'',valveRisk:'no',preg:'',hit:'',aps:'',liver:'',ich:'no',strokeHx:'no',hf:'no',highBleed:'no',meds:[],vaHF:'no',vaHTN:'no',vaDM:'no',vaStroke:'no',vaVasc:'no',combo:'no',provoked:'',cancer:'no',surgery:'',acsPci:'',acsOac:'no',vteHx:'no',strokeAcute:'',accessType:'',accessStage:'',onWarfarin:'no',inrStatus:'',hdBleed:'',clot:'',interact:'unknown',ixSelected:[]});let state=initial();
 const refs=ids=>`<div class="refs">依據：${[...new Set(ids)].map(i=>`<a href="${SOURCES[i][1]}" target="_blank" rel="noopener">${SOURCES[i][0]} ↗</a>`).join('')}</div>`;
 const options=(key,opts)=>`<select id="${key}" data-key="${key}">${opts.map(([v,t])=>`<option value="${v}" ${state[key]===v?'selected':''}>${t}</option>`).join('')}</select>`;
 const field=(key,title,opts,wide=false)=>`<label class="field ${wide?'wide':''}" for="${key}">${title}${options(key,opts)}</label>`;
@@ -8,12 +8,12 @@ const checks=items=>`<div class="checkgrid">${items.map(([k,t])=>`<label><input 
 const pick=[['','請選擇']],ynq=[...pick,['no','否'],['yes','是']];
 const VA=[['vaHF','心衰竭（+1）'],['vaHTN','高血壓（+1）'],['vaDM','糖尿病（+1）'],['vaStroke','中風／TIA／血栓栓塞（+2）'],['vaVasc','血管疾病：MI、PAD、主動脈斑塊（+1）']];
 const indications=[['af','心房顫動 AF','中風／栓塞預防'],['vte','急性 DVT / PE','靜脈血栓治療'],['prevent','VTE 預防','住院、術後、關節置換'],['acs','ACS / PCI','急性冠心症、支架'],['stroke','非心源性中風 / TIA','次級預防'],['dialysis','透析管路抗凝','體外循環防凝血'],['access','AVF／AVG 阻塞預防','廔管／人工血管通暢']];
-const RENDER_KEYS=['sex','kidney','valve','onWarfarin'];
-function note(){return `<aside class="note"><p>▥ &nbsp;臨床小課堂</p><h2>三步完成處方建議</h2><hr>${[['設定目的','先決定為什麼要抗栓：AF、VTE、ACS、中風或透析，治療目標不同。'],['評估病人','年齡、體重、CrCl、瓣膜、肝功能、出血史與併用藥會改變藥物與劑量。'],['推薦處方','依仿單減量條件列出首選、替代與應避免的藥物，並附監測計畫。']].map((a,i)=>`<div class="tip"><span class="number">${i+1}</span><div><h3>${a[0]}</h3><p>${a[1]}</p></div></div>`).join('')}<hr><p style="font-size:13px">劑量已對照台灣仿單（rivaroxaban 除外）與健保藥品給付規定 2.1（115.9.22 版），並列出健保給付條件；處方前仍須核對最新版本並由醫師判斷。</p></aside>`;}
+const RENDER_KEYS=['sex','kidney','valve','onWarfarin','surgery'];
+function note(){return `<aside class="note"><p>▥ &nbsp;臨床小課堂</p><h2>三步完成處方建議</h2><hr>${[['設定目的','先決定為什麼要抗栓：AF、VTE、ACS、中風或透析，治療目標不同。'],['評估病人','年齡、體重、CrCl、瓣膜、肝功能、出血史與併用藥會改變藥物與劑量。'],['推薦處方','依仿單減量條件列出首選、替代與應避免的藥物，並附監測計畫。']].map((a,i)=>`<div class="tip"><span class="number">${i+1}</span><div><h3>${a[0]}</h3><p>${a[1]}</p></div></div>`).join('')}<hr><p style="font-size:13px">劑量已對照台灣仿單與健保藥品給付規定 2.1（115.9.22 版），並列出健保給付條件；處方前仍須核對最新版本並由醫師判斷。</p></aside>`;}
 function purposeFields(){const k=state.ind;
  if(k==='af')return checks([['combo','合併近期 ACS／PCI（需同時抗血小板）']]);
  if(k==='vte')return `<div class="fields">${field('provoked','誘發因素',[...pick,['transient','暫時性重大誘因（手術、外傷、長期臥床）'],['persistent','無明顯誘因或持續性危險因子']],true)}</div>${checks([['cancer','活動性癌症']])}`;
- if(k==='prevent')return `<div class="fields">${field('surgery','住院類型',[...pick,['medical','內科住院'],['surgical','一般外科手術'],['ortho','全髖／全膝關節置換']],true)}</div>`;
+ if(k==='prevent')return `<div class="fields">${field('surgery','住院類型',[...pick,['medical','內科住院'],['surgical','一般外科手術'],['ortho','全髖／全膝關節置換']],true)}</div>${state.surgery==='ortho'?checks([['vteHx','曾有症狀性 VTE 或影像確診 VTE（台灣口服抗凝適應症與健保條件）']]):''}`;
  if(k==='acs')return `<div class="fields">${field('acsPci','處置方式',[...pick,['yes','接受 PCI／支架'],['no','藥物治療（未 PCI）']],true)}</div>${checks([['acsOac','另有長期口服抗凝適應症（如 AF）']])}`;
  if(k==='stroke')return `<div class="fields">${field('strokeAcute','時期',[...pick,['yes','發病 24 小時內：輕微中風（NIHSS ≤3）或高風險 TIA（ABCD² ≥4）'],['no','穩定期／非上述急性情境']],true)}</div>`;
  if(k==='dialysis')return `<div class="fields">${field('onWarfarin','目前每日服用 warfarin？',[['no','否'],['yes','是']],true)}${state.onWarfarin==='yes'?field('inrStatus','近期 INR 相對於個人治療目標',[...pick,['unknown','未知／近期狀態已變'],['low','低於目標'],['target','在目標範圍內'],['high','高於目標']])+field('hdBleed','近期出血／穿刺後止血延長',[...pick,['no','無'],['yes','有']])+field('clot','近期透析器／管路凝血',[...pick,['no','無'],['yes','有']],true):''}</div>`;
@@ -44,7 +44,7 @@ function result(){const r=prescribe(state),ind=indications.find(i=>i[0]===state.
  ${r.avoid.length?`<div class="avoid"><strong>不應使用／避免</strong><ul>${r.avoid.map(p=>`<li>${p}</li>`).join('')}</ul></div>`:''}
  ${r.nhi.length?`<div class="nhi"><strong>健保給付（藥品給付規定 2.1，115.9.22 版）</strong><ul>${r.nhi.map(p=>`<li>${p}</li>`).join('')}</ul></div>`:''}
  ${r.monitor.length?`<h3 class="sec">監測與追蹤</h3><ul>${r.monitor.map(p=>`<li>${p}</li>`).join('')}</ul>`:''}
- ${refs(r.refs)}<p class="notice rx-foot">Apixaban、edoxaban、dabigatran、prasugrel 劑量已對照台灣仿單；rivaroxaban 依歐盟仿單，尚未取得台灣現行仿單全文。健保規定依 115.9.22 版。處方前仍須核對最新仿單、完整用藥與檢驗；本頁不取代醫師判斷。</p></div>
+ ${refs(r.refs)}<p class="notice rx-foot">Apixaban、edoxaban、dabigatran、prasugrel 與 rivaroxaban（2023-05-24 版）劑量已對照台灣仿單。健保規定依 115.9.22 版。處方前仍須核對最新仿單、完整用藥與檢驗；本頁不取代醫師判斷。</p></div>
  <div class="actions"><button class="secondary" id="back">← 修改評估</button><button class="quiet" id="reset">重新開始</button><button class="primary" id="print">列印摘要</button></div>`;}
 function guide(){let body='';
  if(step===0)body=`<h2>這次抗栓治療的目的？</h2><p class="lead">先設定目的；不同目的的藥物與劑量完全不同。</p><div class="choices">${indications.map(([v,t,d])=>`<button class="choice ${state.ind===v?'selected':''}" data-ind="${v}"><strong>${t}</strong><small>${d}</small></button>`).join('')}</div>${state.ind?`<div class="disclaimer purpose">${purposeFields()||'<p>此目的不需補充資料。</p>'}</div>`:''}<div id="alert" role="alert"></div><div class="actions"><span class="notice">多重適應症（如 AF＋支架）請選主要目的，再勾選合併情況。</span><button class="primary" id="next">評估病人 →</button></div>`;
