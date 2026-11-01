@@ -17,7 +17,8 @@ const RX_SRC={
  twEfient:SOURCES.push(['台灣仿單：Efient 抑凝安（115.8 版）','https://www.hosp.nycu.edu.tw/en/departments/dep-support/pharmacy/drog-use-search/7074-prasugrel.html'])-1,
  twXarelto:SOURCES.push(['台灣仿單：Xarelto 拜瑞妥（2023-05-24 版）','https://reg.802.mnd.gov.tw/PhC/images/drug/OXAR/Guide1.pdf'])-1,
  twXarelto25:SOURCES.push(['台灣仿單：Xarelto 拜瑞妥 2.5 mg（2026-09-02 版，衛部藥輸字第 027750 號）',''])-1,
- nhi:SOURCES.push(['健保藥品給付規定 第二節 2.1（115.9.22 版）','https://www.nhi.gov.tw/ch/cp-7593-ad2a9-3397-1.html'])-1
+ nhi:SOURCES.push(['健保藥品給付規定 第二節 2.1（115.9.22 版）','https://www.nhi.gov.tw/ch/cp-7593-ad2a9-3397-1.html'])-1,
+ twClexane:SOURCES.push(['台灣仿單：Clexane 克立生 6,000–10,000 anti-Xa IU（衛署藥輸字第 022354 號）','https://www-ws.gov.taipei/001/Upload/446/relfile/40522/7414976/96deaa86-a18b-493a-a6f0-623874afe0bf.pdf'])-1
 };
 const RX_MEDS=[
  ['strong','強效 CYP3A4＋P-gp 抑制劑：ketoconazole、itraconazole、ritonavir（含 Paxlovid）'],
@@ -32,7 +33,7 @@ function crcl(x){const a=+x.age,w=+x.weight,s=+x.scr;if(!(a>0&&w>0&&s>0))return 
 function vaScore(x){const a=+x.age;return (a>=75?2:a>=65?1:0)+['vaHF','vaHTN','vaDM','vaVasc'].filter(k=>x[k]==='yes').length+(x.vaStroke==='yes'?2:0);}
 const WARFARIN_START='起始常用 2–5 mg/日（高齡、低體重、肝病、亞洲族群或併用升 INR 藥物取低值），不使用負荷劑量；初期每 2–3 天追 INR 至穩定。';
 function warfarinRx(target,range,extra=[]){return {drug:'Warfarin',dose:`目標 INR ${target}（範圍 ${range}）`,lines:[WARFARIN_START,...extra]};}
-function inrTarget(x){if(x.valve==='mechanical'){const high=x.valvePos!=='aortic'||x.valveRisk==='yes';return high?['3.0','2.5–3.5']:['2.5','2.0–3.0'];}return ['2.5','2.0–3.0'];}
+function inrTarget(x){if(x.valve==='mechanical'){const high=x.valvePos!=='aortic'||x.valveRisk==='yes'||x.ind==='af';return high?['3.0','2.5–3.5']:['2.5','2.0–3.0'];}return ['2.5','2.0–3.0'];}
 
 // NHI 2.1.4.2–2.1.5 AF criteria; rivaroxaban alone also covers age 50–74 with DM/HTN/CAD.
 function nhiAF(x){const age=+x.age,risk=x.vaDM==='yes'||x.vaHTN==='yes'||x.vaVasc==='yes';
@@ -76,6 +77,7 @@ function prescribe(x){
  const warfMonitor=()=>r.monitor.push('INR 穩定後約每 4 週追蹤；新增／停用藥物、飲食大變、急性疾病時加密。','衛教維生素 K 飲食一致、出血警訊與避免自行服用 NSAIDs。');
  const valveOrAps=x.valve==='mechanical'||x.aps==='yes'||(x.ind==='af'&&x.valve==='ms');
  if(x.ind==='af'){
+  if(x.combo==='yes'&&has('omep'))r.notes.push('Clopidogrel 避免與 omeprazole／esomeprazole 併用；需胃保護時改 pantoprazole 等。');
   if(valveOrAps){const [t,rg]=inrTarget(x);r.primary=warfarinRx(t,rg,[x.valve==='mechanical'?(t==='3.0'?'機械二尖瓣，或主動脈瓣合併 AF、既往栓塞、左心室功能不良、高凝狀態：INR 3.0':'機械主動脈瓣且無其他血栓危險因子：INR 2.5'):x.aps==='yes'?'高風險血栓性 APS：INR 2–3':'AF 合併中重度二尖瓣狹窄：INR 2–3']);r.avoid.push('DOAC 不適用於機械瓣膜、中重度二尖瓣狹窄或高風險 APS。');r.refs.push(RX_SRC.valve);warfMonitor();bleedMeds();return r;}
   if(score===0){r.title='CHA₂DS₂-VA 0：不需常規抗凝';r.notes.unshift('每年或臨床變化時重新評估 CHA₂DS₂-VA。');return r;}
   if(dial||c<15){review('末期腎病／透析 AF：是否抗凝需個別決定');r.notes.unshift('證據有限；先評估出血史、跌倒、預期壽命與病人偏好。');
@@ -93,14 +95,15 @@ function prescribe(x){
   r.refs.push(0);doacMonitor();bleedMeds();return r;}
  if(x.ind==='vte'){
   r.notes.unshift(x.provoked==='transient'?'療程：由暫時性重大誘因引起 → 3 個月後停藥。':'療程：無明顯誘因或持續性危險因子 → 至少 3 個月，之後若出血風險可接受多建議延長（6 個月後 apixaban 2.5 mg BID，或 rivaroxaban 10／20 mg QD）。');
-  if(x.preg==='yes'){r.primary={drug:'Enoxaparin',dose:'1 mg/kg SC q12h',lines:['孕期全程持續，至產後至少 6 週，總療程 ≥3 個月','預計分娩／神經軸麻醉前 24 小時停用；CrCl <30 改 1 mg/kg QD 並會診'],s:[6,8]};r.monitor.push('追蹤血小板與體重變化；必要時 anti-Xa。');return r;}
-  if(x.cancer==='yes'){review('癌症相關 VTE：DOAC 或 LMWH');r.notes.unshift('ASH 2021：初期與短期治療建議 apixaban、edoxaban、rivaroxaban 或 LMWH；胃腸／泌尿道腫瘤出血風險高者偏好 apixaban 或 LMWH。');r.refs.push(RX_SRC.cancer);}
-  if(valveOrAps){const [t,rg]=inrTarget(x);r.primary=warfarinRx(t,rg,['先以 UFH／LMWH 重疊至少 5 天，且 INR 達標 ≥24 小時後停注射']);r.alts.push({drug:'Enoxaparin（起始重疊）',dose:'1 mg/kg SC q12h',lines:['CrCl <30：1 mg/kg QD'],s:[8]});r.avoid.push('DOAC 不適用於機械瓣膜或高風險 APS。');warfMonitor();bleedMeds();return r;}
+  if(x.preg==='yes'&&(dial||c<30||renal==='aki')){review('孕期合併嚴重腎功能受限：UFH，會診');r.primary={drug:'UFH 靜脈輸注',dose:'80 U/kg bolus → 18 U/kg/h',lines:['依院內 aPTT 或 anti-Xa nomogram 調整；由母胎醫學與腎臟科共同規劃','台灣 Clexane 仿單：CrCl 約 30 mL/min 不建議，應改傳統肝素（透析者例外）；美國仿單為 1 mg/kg QD'],s:[3,6,RX_SRC.twClexane]};r.monitor.push('追蹤血小板與 aPTT／anti-Xa。');return r;}
+  if(x.preg==='yes'){r.primary={drug:'Enoxaparin',dose:'1 mg/kg SC q12h',lines:['孕期全程持續，至產後至少 6 週，總療程 ≥3 個月','預計分娩／神經軸麻醉前 24 小時停用'],s:[6,8]};r.monitor.push('追蹤血小板與體重變化；必要時 anti-Xa。');return r;}
+  if(x.cancer==='yes'){review('癌症相關 VTE：DOAC 或 LMWH');r.notes.unshift('ASH 2021：起始可用 apixaban、rivaroxaban 或 LMWH（建議 20）；3–6 個月短期治療，DOAC（apixaban、edoxaban、rivaroxaban）優於 LMWH（建議 23）。胃腸癌或曾切除上消化道者用 DOAC 要謹慎。');r.refs.push(RX_SRC.cancer);}
+  if(valveOrAps){const [t,rg]=inrTarget(x);r.primary=warfarinRx(t,rg,['先以 UFH／LMWH 重疊至少 5 天，且 INR 達標 ≥24 小時後停注射']);r.alts.push({drug:'Enoxaparin（起始重疊）',dose:'1 mg/kg SC q12h',lines:['CrCl <30：台灣 Clexane 仿單不建議，改 UFH（美國仿單 1 mg/kg QD）'],s:[8,RX_SRC.twClexane]});r.avoid.push('DOAC 不適用於機械瓣膜或高風險 APS。');warfMonitor();bleedMeds();return r;}
   const ufh={drug:'UFH 靜脈輸注',dose:'80 U/kg bolus → 18 U/kg/h',lines:['依院內 aPTT 或 anti-Xa nomogram 調整；可快速停藥，適合 AKI、透析或可能需介入者'],s:[3]};
   const enox=(qd)=>({drug:'Enoxaparin → warfarin',dose:qd?'1 mg/kg SC QD（CrCl <30）':'1 mg/kg SC q12h',lines:['同日開始 warfarin，重疊至少 5 天且 INR ≥2 達 24 小時','健保：治療 DVT 每療程 <10 天'],s:[8,9]});
   r.nhi=['DOAC 須經影像或超音波確診，每 6 個月評估一次。','Apixaban、rivaroxaban 可直接口服起始；edoxaban、dabigatran 須先注射抗凝 ≥5 天，dabigatran 給付 6 個月。','Enoxaparin 治療 DVT 每療程 <10 天；UFH、warfarin 無特別限制。'];r.refs.push(RX_SRC.nhi);
   if(dial||c<15||renal==='aki'){review('腎功能嚴重受限：UFH 起始，轉 warfarin');r.primary=ufh;r.alts.push(warfarinRx('2.5','2.0–3.0',['與 UFH 重疊至少 5 天且 INR ≥2 達 24 小時']));r.avoid.push('CrCl <15／透析不建議 DOAC；LMWH 會累積。');warfMonitor();bleedMeds();return r;}
-  if(c<30){review('CrCl 15–29：注射起始，個別選擇口服');r.primary=enox(true);r.alts.push(ufh,{drug:'Apixaban',dose:'10 mg BID ×7 天 → 5 mg BID',lines:['CrCl 15–29 資料有限，仿單建議謹慎'],s:[10,RX_SRC.eliquis],caution:true});r.avoid.push('Dabigatran CrCl <30 禁用；rivaroxaban 治療 VTE 於 CrCl 15–30 應避免（台灣仿單）；edoxaban 須謹慎。');warfMonitor();bleedMeds();return r;}
+  if(c<30){review('CrCl 15–29：UFH 起始，個別選擇口服');r.primary=ufh;const eq=enox(true);r.alts.push(warfarinRx('2.5','2.0–3.0',['與 UFH 重疊至少 5 天且 INR ≥2 達 24 小時']),{...eq,caution:true,lines:['台灣 Clexane 仿單：CrCl 約 30 mL/min 不建議，應改傳統肝素（透析者例外）；美國仿單為 1 mg/kg QD',...eq.lines],s:[RX_SRC.twClexane,8,9]},{drug:'Apixaban',dose:'10 mg BID ×7 天 → 5 mg BID',lines:['CrCl 15–29 資料有限，仿單建議謹慎'],s:[10,RX_SRC.eliquis],caution:true});r.avoid.push('Dabigatran CrCl <30 禁用；rivaroxaban 治療 VTE 於 CrCl 15–30 應避免（台灣仿單）；edoxaban 須謹慎。');warfMonitor();bleedMeds();return r;}
   if(has('inducer')||has('strong')){review('交互作用限制 DOAC：LMWH 起始，轉 warfarin');r.primary=enox(false);if(has('strong')&&!has('inducer'))r.alts.push({drug:'Apixaban（減量 50%）',dose:'5 mg BID ×7 天 → 2.5 mg BID',lines:['台灣仿單：併用強效 CYP3A4＋P-gp 抑制劑時 5／10 mg BID 劑量減 50%'],s:[RX_SRC.twEliquis],caution:true});r.avoid.push(has('inducer')?'所有 DOAC：強效誘導劑降低療效。':'Rivaroxaban／dabigatran：強效 CYP3A4＋P-gp 抑制劑增加出血，請藥師審查。');warfMonitor();bleedMeds();return r;}
   const age=+x.age,w=+x.weight,ed30=c<=50||w<=60||has('dron')||has('erythro');
   const doacs=[{drug:'Apixaban',dose:'10 mg BID ×7 天 → 5 mg BID',lines:['可直接口服起始，不需先打針','治療期不依腎功能／年齡減量'],s:[10,RX_SRC.eliquis]}];
@@ -113,7 +116,8 @@ function prescribe(x){
  if(x.ind==='prevent'){
   if(x.valve==='mechanical'||x.aps==='yes'){review('已在長期 warfarin：不另加預防劑量');r.notes.unshift('INR 達標者已有治療性抗凝，不需另加 VTE 預防劑量；手術中斷 warfarin 時的橋接由專科依瓣膜／血栓風險決定。');return r;}
   if(x.highBleed==='yes'){review('出血風險高：先用機械性預防');r.primary={drug:'間歇性氣動壓迫（IPC）',dose:'住院期間持續使用',lines:['出血風險下降後再評估藥物預防'],s:[RX_SRC.medical]};r.refs.push(RX_SRC.medical);return r;}
-  const lmwh={drug:'Enoxaparin',dose:dial||c<30?'30 mg SC QD':'40 mg SC QD',lines:[dial||c<30?'CrCl <30 減量':'標準預防劑量',x.surgery==='ortho'?'健保：膝／髖關節手術給付 30 mg QD、7–10 天':x.surgery==='surgical'?'健保：腹部手術給付 40 mg QD、7–10 天':'健保 2.1.3.2 未列內科住院預防用途'],s:[8,RX_SRC.nhi]};
+  const lmwh=x.surgery==='ortho'?{drug:'Enoxaparin',dose:'30 mg SC QD',lines:['健保 2.1.3.2：膝蓋或髖關節手術 30 mg QD、7–10 天（CrCl <30 亦為此劑量）','美國仿單為 30 mg q12h（髖關節置換可考慮 40 mg QD），與健保劑量不同，請依院內規範確認','查到的台灣 Clexane 6,000–10,000 IU 仿單未列手術預防適應症；2,000／4,000 IU 規格仿單未取得'],s:[RX_SRC.nhi,8,RX_SRC.twClexane]}:{drug:'Enoxaparin',dose:dial||c<30?'30 mg SC QD':'40 mg SC QD',lines:[dial||c<30?'CrCl <30 減量':'標準預防劑量',x.surgery==='surgical'?'健保：腹部手術給付 40 mg QD、7–10 天':'健保 2.1.3.2 未列內科住院預防用途'],s:[8,RX_SRC.nhi]};
+  if(!dial&&c<30)lmwh.lines.push('台灣 Clexane 6,000–10,000 IU 仿單：CrCl 約 30 mL/min 不建議，應改傳統肝素（透析者例外）；預防劑量是否同樣適用未明確，可選 UFH');
   const ufh={drug:'UFH 皮下',dose:'5,000 U SC q8–12h',lines:['透析、CrCl <15 或可能需快速停藥時優先'],s:[RX_SRC.medical]};
   if(x.surgery==='ortho'){r.title='髖／膝關節置換術後 VTE 預防';r.notes.unshift('療程：全髖關節置換約 35 天；全膝關節置換 10–14 天。');
    const age=+x.age,d150=c<=50||age>=75||has('vera');
