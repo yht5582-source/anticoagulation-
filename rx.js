@@ -117,20 +117,20 @@ function prescribe(x){
   if(x.valve==='mechanical'||x.aps==='yes'){review('已在長期 warfarin：不另加預防劑量');r.notes.unshift('INR 達標者已有治療性抗凝，不需另加 VTE 預防劑量；手術中斷 warfarin 時的橋接由專科依瓣膜／血栓風險決定。');return r;}
   if(x.highBleed==='yes'){review('出血風險高：先用機械性預防');r.primary={drug:'間歇性氣動壓迫（IPC）',dose:'住院期間持續使用',lines:['出血風險下降後再評估藥物預防'],s:[RX_SRC.medical]};r.refs.push(RX_SRC.medical);return r;}
   const lmwh=x.surgery==='ortho'?{drug:'Enoxaparin',dose:'30 mg SC QD',lines:['健保 2.1.3.2：膝蓋或髖關節手術 30 mg QD、7–10 天（CrCl <30 亦為此劑量）','美國仿單為 30 mg q12h（髖關節置換可考慮 40 mg QD），與健保劑量不同，請依院內規範確認','查到的台灣 Clexane 6,000–10,000 IU 仿單未列手術預防適應症；2,000／4,000 IU 規格仿單未取得'],s:[RX_SRC.nhi,8,RX_SRC.twClexane]}:{drug:'Enoxaparin',dose:dial||c<30?'30 mg SC QD':'40 mg SC QD',lines:[dial||c<30?'CrCl <30 減量':'標準預防劑量',x.surgery==='surgical'?'健保：腹部手術給付 40 mg QD、7–10 天':'健保 2.1.3.2 未列內科住院預防用途'],s:[8,RX_SRC.nhi]};
-  if(!dial&&c<30)lmwh.lines.push('台灣 Clexane 6,000–10,000 IU 仿單：CrCl 約 30 mL/min 不建議，應改傳統肝素（透析者例外）；預防劑量是否同樣適用未明確，可選 UFH');
-  const ufh={drug:'UFH 皮下',dose:'5,000 U SC q8–12h',lines:['透析、CrCl <15 或可能需快速停藥時優先'],s:[RX_SRC.medical]};
+  if(!dial&&c<30){lmwh.caution=true;lmwh.lines.push('台灣 Clexane 6,000–10,000 IU 仿單：CrCl 約 30 mL/min 不建議，應改傳統肝素（透析者例外）；預防劑量是否同樣適用未明確，故以 UFH 優先');}
+  const ufh={drug:'UFH 皮下',dose:'5,000 U SC q8–12h',lines:['透析、CrCl <30 或可能需快速停藥時優先'],s:[RX_SRC.medical]};
   if(x.surgery==='ortho'){r.title='髖／膝關節置換術後 VTE 預防';r.notes.unshift('療程：全髖關節置換約 35 天；全膝關節置換 10–14 天。');
    const age=+x.age,d150=c<=50||age>=75||has('vera');
    const hx=x.vteHx==='yes',riva={drug:'Rivaroxaban',dose:'10 mg QD，止血後術後 6–10 小時開始',lines:['髖 5 週、膝 2 週','台灣適應症限曾發生有症狀 VTE 的高危險群','CrCl 15–30 應避免、<15 禁用；Child-Pugh B／C 禁用'],s:[RX_SRC.twXarelto,IX_SOURCES.rivaroxaban],caution:!hx};
    const dabi={drug:'Dabigatran',caution:!hx,dose:d150?'150 mg QD（75 mg ×2）':'220 mg QD（110 mg ×2）',lines:['台灣適應症限靜脈血栓高危險群','術後 1–4 小時先服 1 顆，之後每日一次 2 顆',d150?'台灣仿單：CrCl 30–50、≥75 歲或併用 verapamil／amiodarone／quinidine 用 150 mg QD':'未達減量條件','健保限 75 mg 每日至多 2 粒（150 mg/日）'],s:[RX_SRC.twPradaxa]};
    const apix={drug:'Apixaban',dose:'2.5 mg BID',lines:['台灣仿單未核准此適應症（仿單外），健保不給付'],s:[RX_SRC.twEliquis],caution:true};
    r.nhi=['Rivaroxaban 10 mg（髖 ≤5 週、膝 ≤2 週）、dabigatran、fondaparinux 2.5 mg：限曾有症狀 VTE 或影像確診 VTE 的高危險者。','Enoxaparin：膝／髖關節手術 30 mg QD、7–10 天。','Apixaban：台灣未核准此適應症。'];r.refs.push(RX_SRC.nhi);
-   if(dial||c<30){review();r.primary=dial||c<15?ufh:lmwh;r.alts.push(...(dial||c<15?[lmwh]:[ufh]));r.avoid.push('Dabigatran：CrCl <30 禁用。');}
+   if(dial||c<30){review();r.primary=ufh;r.alts.push(lmwh);r.avoid.push('Dabigatran：CrCl <30 禁用。');}
    else if(!hx){r.primary=lmwh;r.notes.unshift('無症狀 VTE 病史：台灣 rivaroxaban／dabigatran 的骨科預防適應症與健保給付皆限高危險群，故以 enoxaparin 為首選。');r.alts.push(...[x.liver==='b'?null:riva,dabi,{drug:'Aspirin',dose:'依骨科方案',lines:['ASH 2019 允許作為選項之一，常用於低風險或接續療程'],s:[RX_SRC.surgical]},apix].filter(Boolean));}
    else{r.primary=x.liver==='b'?dabi:riva;r.alts.push(...[x.liver==='b'?null:dabi,lmwh,{drug:'Aspirin',dose:'依骨科方案',lines:['ASH 2019 允許作為選項之一，常用於低風險或接續療程'],s:[RX_SRC.surgical]},apix].filter(Boolean));}
    r.refs.push(RX_SRC.surgical);return r;}
   r.nhi=[x.surgery==='surgical'?'Enoxaparin：腹部手術 40 mg QD、7–10 天。':'Enoxaparin 給付規定未列內科住院預防；UFH 皮下注射無特別限制。'];r.refs.push(RX_SRC.nhi);
-  r.title=x.surgery==='surgical'?'手術病人 VTE 預防':'住院內科病人 VTE 預防';r.primary=dial||c<15?ufh:lmwh;r.alts.push(dial||c<15?lmwh:ufh);
+  r.title=x.surgery==='surgical'?'手術病人 VTE 預防':'住院內科病人 VTE 預防';r.primary=dial||c<30?ufh:lmwh;r.alts.push(dial||c<30?lmwh:ufh);
   r.notes.unshift(x.surgery==='surgical'?'術後依出血止血情況開始，持續至可活動或依手術類型；高風險腹部／骨盆癌症手術可延長至 4 週。':'僅住院期間使用；出院後不常規延長。先確認血栓風險確實增加（如 Padua／IMPROVE）。');
   r.refs.push(x.surgery==='surgical'?RX_SRC.surgical:RX_SRC.medical);r.monitor.push('使用 heparin 類 5–14 天內追蹤血小板，警覺 HIT。');return r;}
  if(x.ind==='acs'){

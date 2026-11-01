@@ -56,7 +56,10 @@ t('VTE CrCl 30+ keeps DOAC first',{ind:'vte',age:'70',weight:'70',scr:'1.5'},r=>
 t('Pregnancy VTE CrCl<30 UFH',{ind:'vte',sex:'f',age:'30',weight:'50',scr:'3',preg:'yes'},r=>r.crcl<30&&P(r).drug==='UFH 靜脈輸注'&&r.level==='review');
 t('Pregnancy VTE AKI UFH',{ind:'vte',sex:'f',age:'30',aki:'yes',preg:'yes'},r=>P(r).drug==='UFH 靜脈輸注');
 t('Mechanical VTE enoxaparin alt renal note',{ind:'vte',valve:'mechanical',valvePos:'mitral'},r=>r.alts[0].lines[0].includes('改 UFH'));
-t('Prevention CrCl 15-29 enoxaparin flags label, UFH alt',{ind:'prevent',surgery:'medical',age:'80',weight:'60',scr:'2.2'},r=>P(r).dose==='30 mg SC QD'&&P(r).lines.some(l=>l.includes('台灣 Clexane'))&&alt(r,'UFH 皮下').dose);
+t('Prevention CrCl 15-29 UFH first, enoxaparin 30 caution',{ind:'prevent',surgery:'medical',age:'80',weight:'60',scr:'2.2'},r=>r.crcl<30&&r.crcl>=15&&P(r).drug==='UFH 皮下'&&alt(r,'Enoxaparin').dose==='30 mg SC QD'&&alt(r,'Enoxaparin').caution&&alt(r,'Enoxaparin').lines.some(l=>l.includes('台灣 Clexane')));
+t('Abdominal surgery CrCl 15-29 UFH first',{ind:'prevent',surgery:'surgical',age:'80',weight:'60',scr:'2.2'},r=>P(r).drug==='UFH 皮下');
+t('Ortho CrCl 15-29 UFH first',{ind:'prevent',surgery:'ortho',age:'80',weight:'60',scr:'2.2'},r=>P(r).drug==='UFH 皮下'&&alt(r,'Enoxaparin').caution&&r.avoid.some(a=>a.startsWith('Dabigatran')));
+t('Prevention CrCl 30+ keeps enoxaparin',{ind:'prevent',surgery:'medical',age:'70',weight:'70',scr:'1.5'},r=>r.crcl>=30&&P(r).drug==='Enoxaparin'&&!P(r).caution);
 t('Prevention normal renal no Clexane renal note',{ind:'prevent',surgery:'medical'},r=>!P(r).lines.some(l=>l.includes('CrCl 約 30')));
 t('VTE dialysis UFH',{ind:'vte',kidney:'hd'},r=>P(r).drug.includes('UFH'));
 t('VTE AKI UFH',{ind:'vte',aki:'yes'},r=>P(r).drug.includes('UFH'));
@@ -65,7 +68,7 @@ t('VTE mechanical warfarin + overlap',{ind:'vte',valve:'mechanical',valvePos:'mi
 t('VTE cancer note',{ind:'vte',cancer:'yes'},r=>r.level==='review'&&r.notes.some(x=>x.includes('ASH 2021')));
 t('VTE inducer LMWH',{ind:'vte',meds:['inducer']},r=>P(r).drug.includes('Enoxaparin'));
 t('Prevent medical enox 40',{ind:'prevent',surgery:'medical'},r=>P(r).dose==='40 mg SC QD');
-t('Prevent CrCl<30 enox 30',{ind:'prevent',surgery:'medical',age:'85',weight:'50',scr:'2'},r=>P(r).dose==='30 mg SC QD');
+t('Prevent CrCl<30 UFH first, enox 30 alt',{ind:'prevent',surgery:'medical',age:'85',weight:'50',scr:'2'},r=>P(r).drug==='UFH 皮下'&&alt(r,'Enoxaparin').dose==='30 mg SC QD');
 t('Prevent dialysis UFH',{ind:'prevent',surgery:'surgical',kidney:'hd'},r=>P(r).drug==='UFH 皮下');
 t('Prevent high bleed IPC',{ind:'prevent',surgery:'medical',highBleed:'yes'},r=>P(r).drug.includes('IPC'));
 t('Prevent ortho no VTE history -> enoxaparin',{ind:'prevent',surgery:'ortho'},r=>P(r).drug==='Enoxaparin'&&alt(r,'Rivaroxaban').caution&&alt(r,'Apixaban').caution);
